@@ -17,6 +17,7 @@ namespace AST
 		ASTree(NodePtr& root);
 		~ASTree();
 		bool addChild(NodePtr& node);
+		void removeCurrNode();
 		NodePtr root() { return _root; };
 		NodePtr curr() { return _curr; };
 		void moveToParent() { _curr = _curr->parent(); }

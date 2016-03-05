@@ -21,6 +21,7 @@ public:
 	~ASTNode();
 	bool addChild(NodePtr& child); 
 	bool addAsChildOf(NodePtr& parent, NodePtr& child);
+	void removeChild(NodePtr child);
 	NodePtr parent();
 	Children children();
 	void showNodeInfo();

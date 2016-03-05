@@ -53,6 +53,9 @@
 #include "../SemiExp/SemiExp.h"
 #include "../Tokenizer/Tokenizer.h"
 #include "ActionsAndRules.h"
+#include "AbstractSyntaxTree.h"
+
+using namespace AST;
 
 ///////////////////////////////////////////////////////////////
 // build parser that writes its output to console
@@ -73,19 +76,33 @@ private:
   Scanner::SemiExp* pSemi;
   Parser* pParser;
   Repository* pRepo;
+  ASTree* pAst;
 
   // add Rules and Actions
-
+  //Rules
   BeginningOfScope* pBeginningOfScope;
-  HandlePush* pHandlePush;
   EndOfScope* pEndOfScope;
-  HandlePop* pHandlePop;
+  ClassDefinition* pClassDefinition;
   FunctionDefinition* pFunctionDefinition;
-  PushFunction* pPushFunction;
-  PrintFunction* pPrintFunction;
   Declaration* pDeclaration;
-  ShowDeclaration* pShowDeclaration;
   Executable* pExecutable;
+
+  //Actions
+  HandlePush* pHandlePush;  
+  AddScopeNode* pAddScopeNode;
+
+  HandlePop* pHandlePop;  
+  MoveToParentNode* pMoveToParentNode;
+
+  PushClass* pPushClass;
+  AddClassNode* pAddClassNode;
+
+  PushFunction* pPushFunction;
+  AddFunctionNode* pAddFunctionNode;
+  PrintFunction* pPrintFunction;
+  
+  ShowDeclaration* pShowDeclaration;
+
   ShowExecutable* pShowExecutable;
 
   // prohibit copies and assignments

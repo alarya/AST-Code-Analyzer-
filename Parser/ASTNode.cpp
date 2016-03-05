@@ -20,7 +20,10 @@ ASTNode::ASTNode()
 //----------------------Dtor----------------------------//
 ASTNode::~ASTNode()
 {
-
+	for (NodePtr child : _children)
+	{
+		delete child;
+	}
 }
 
 //--------------------Add a Child to the node-----------//
@@ -80,7 +83,14 @@ int ASTNode::noOfChildren()
 	return _children.size();
 }
 
+//-------------remove a child -------------------------//
+void ASTNode::removeChild(NodePtr child)
+{
+	std::vector<NodePtr>::iterator position = std::find(_children.begin(), _children.end(), child);
+	_children.erase(position);
+	delete child;
 
+}
 #ifdef TEST_ASTNODE
 
 int main(int argc, char* argv[])
@@ -112,6 +122,10 @@ int main(int argc, char* argv[])
 	node->addChild(child1);
 	node->addChild(child2);
 	node->addChild(child3);
+
+	node->printChildren();
+
+	node->removeChild(child3);
 
 	node->printChildren();
 

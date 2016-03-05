@@ -64,7 +64,11 @@
 #include "../ScopeStack/ScopeStack.h"
 #include "../Tokenizer/Tokenizer.h"
 #include "../SemiExp/SemiExp.h"
+#include "AbstractSyntaxTree.h"
+#include "ASTNode.h"
 
+using namespace Scanner;
+using namespace AST;
 ///////////////////////////////////////////////////////////////
 // ScopeStack element is application specific
 /* ToDo:
@@ -89,9 +93,10 @@ struct element
   }
 };
 
-///////////////////////////////////////////////////////////////
+//-------------------------------------------------------
 // Repository instance is used to share resources
 // among all actions.
+//-------------------------------------------------------
 /*
  * ToDo:
  * - add AST Node class
@@ -103,10 +108,12 @@ class Repository  // application specific
 {
   ScopeStack<element> stack;
   Scanner::Toker* p_Toker;
+  AST::ASTree* _ast;
 public:
-  Repository(Scanner::Toker* pToker)
+  Repository(Toker* pToker,ASTree* pAst)
   {
     p_Toker = pToker;
+	_ast = pAst;
   }
   ScopeStack<element>& scopeStack()
   {
@@ -120,11 +127,14 @@ public:
   {
     return (size_t)(p_Toker->currentLineCount());
   }
+  AST::ASTree* AST()
+  {
+	  return _ast;
+  }
 };
 
-///////////////////////////////////////////////////////////////
-// rule to detect beginning of anonymous scope
 
+//--------Rule: Detect beginning of a scope (may be anonymous or not)
 class BeginningOfScope : public IRule
 {
 public:
@@ -138,10 +148,7 @@ public:
     return true;
   }
 };
-
-///////////////////////////////////////////////////////////////
-// action to handle scope stack at end of scope
-
+//-------Action: push anonymous scope to  scope stack (Rule: Beginning of Scope)
 class HandlePush : public IAction
 {
   Repository* p_Repos;
@@ -160,10 +167,27 @@ public:
     p_Repos->scopeStack().push(elem);
   }
 };
+//--------------Action: add anonymous scope to the AST (Rule:Beginning of Scope)
+class AddScopeNode : public IAction
+{
+	Repository* _pRepos;
+public:
+	AddScopeNode(Repository* pRepos)
+	{
+		_pRepos = pRepos;
+	}
+	void doAction(ITokCollection*& pTc)
+	{
+		ASTNode* node = new ASTNode();
+		node->setNodeName("anonymous");
+		node->setNodeType("scope");
+		node->setLineStart(_pRepos->lineCount());
+		_pRepos->AST()->addChild(node);
+	}
+};
 
-///////////////////////////////////////////////////////////////
-// rule to detect end of scope
 
+//-----------Rule: Detect end of Scope---------------------------------------
 class EndOfScope : public IRule
 {
 public:
@@ -177,10 +201,7 @@ public:
     return true;
   }
 };
-
-///////////////////////////////////////////////////////////////
-// action to handle scope stack at end of scope
-
+//---- Action: Pop Scope Stack element (Rule: EndOfScope)---------------------
 class HandlePop : public IAction
 {
   Repository* p_Repos;
@@ -199,15 +220,30 @@ public:
     {
       //std::cout << "\nHandlePop";
       //std::cout << "\n--popping at line count = " << p_Repos->lineCount();
-      std::cout << "\n  Function " << elem.name << ", lines = " << p_Repos->lineCount() - elem.lineCount + 1;
+      //std::cout << "\n  Function " << elem.name << ", lines = " << p_Repos->lineCount() - elem.lineCount + 1;
       std::cout << "\n";
     }
   }
 };
+//------Action: Move current AST node to parent (Rule: EndOfScope)
+class MoveToParentNode : public IAction
+{
+	Repository* _pRepos;
+public:
+	MoveToParentNode(Repository* pRepos)
+	{
+		_pRepos = pRepos;
+	}
+	void doAction(ITokCollection*& pTc)
+	{
+		ASTNode* _curr = _pRepos->AST()->curr();
+		_curr->setLineEnd(_pRepos->lineCount());
+		_pRepos->AST()->moveToParent();
+	}
+};
 
-///////////////////////////////////////////////////////////////
-// rule to detect preprocessor statements
 
+//-----Rule: To detect preprocessor statements ------------------------------
 class PreprocStatement : public IRule
 {
 public:
@@ -222,9 +258,7 @@ public:
   }
 };
 
-///////////////////////////////////////////////////////////////
-// action to print preprocessor statement to console
-
+//---  Action: To print preprocessor statements (Rule: PreprocStatement)------
 class PrintPreproc : public IAction
 {
 public:
@@ -234,9 +268,157 @@ public:
   }
 };
 
-///////////////////////////////////////////////////////////////
-// rule to detect function definitions
+//--- Rule: Detect Namespace ------------------------------------------------
+class NameSpaceDefinition : public IRule
+{
+public:
+	bool doTest(ITokCollection*& pTc)
+	{	
+		if (pTc->find("namespace") < pTc->length())
+		{
+			if ((*pTc)[pTc->find("namespace") - 1] != "using")  //should NS decl not import
+				doActions(pTc);
+		}
 
+		return true;
+	}
+};
+//----Action: Add namespace to scopestack (Rule: NamespaceDefiniton)-----
+class PushNamespace : public IAction
+{
+	Repository* _pRepos;
+public:
+	PushNamespace(Repository* pRepos)
+	{
+		_pRepos = pRepos;
+	}
+	void doAction(ITokCollection*& pTc)
+	{
+		//pop anonymous scope
+		_pRepos->scopeStack().pop();
+
+		// push function scope
+		std::string name = (*pTc)[pTc->find("namespace") + 1];
+		element elem;
+		elem.type = "namespace";
+		elem.name = name;
+		elem.lineCount = _pRepos->lineCount();
+		_pRepos->scopeStack().push(elem);
+	}
+};
+//----Action: Push Namespace Node to AST (Rule: NameSpaceDefinition)-----
+class AddNamespaceNode : public IAction
+{
+	Repository* _pRepos;
+public:
+	AddNamespaceNode(Repository* pRepos)
+	{
+		_pRepos = pRepos;
+	}
+	void doAction(ITokCollection*& pTc)
+	{
+		//remove the anonymous node
+		_pRepos->AST()->removeCurrNode();
+
+		//Add the function node to current scope node
+		std::string name = (*pTc)[pTc->find("namespace") + 1];
+		ASTNode* node = new ASTNode();
+		node->setNodeName(name);
+		node->setNodeType("namespace");
+		node->setLineStart(_pRepos->lineCount());
+		_pRepos->AST()->addChild(node);
+	}
+};
+//----Action: Print Namespace definition----------------------------
+class PrintNamespace : public IAction {
+	Repository* _pRepos;
+public:
+	void doAction(ITokCollection*& pTc)
+	{
+		std::string name = (*pTc)[pTc->find("namespace") + 1];
+		std::cout << "\n  namespace: " << name;
+		std::cout << "\n";
+	}
+};
+
+
+//--- Rule: Detect Class ---------------------------------------
+class ClassDefinition : public IRule
+{
+public:
+	bool doTest(ITokCollection*& pTc)
+	{
+		ITokCollection& tc = *pTc;
+		if (tc[tc.length() - 1] == "{")
+		{
+			size_t index = tc.find("class");
+			if (index < tc.length())
+			{
+				doActions(pTc);
+			}
+		}
+
+		return true;
+	}
+};
+//----Action: Push class to ScopeStack (Rule: CLassDefinition)---
+class PushClass : public IAction
+{
+	Repository* _pRepos;
+public:
+	PushClass(Repository* pRepos)
+	{
+		_pRepos = pRepos;
+	}
+	void doAction(ITokCollection*& pTc)
+	{
+		//pop anonymous scope
+		_pRepos->scopeStack().pop();
+
+		// push function scope
+		std::string name = (*pTc)[pTc->find("class") + 1];
+		element elem;
+		elem.type = "class";
+		elem.name = name;
+		elem.lineCount = _pRepos->lineCount();
+		_pRepos->scopeStack().push(elem);
+	}
+};
+//----Action: Push class Node to AST (Rule: ClassDefinition)-----
+class AddClassNode : public IAction
+{
+	Repository* _pRepos;
+public:
+	AddClassNode(Repository* pRepos)
+	{
+		_pRepos = pRepos;
+	}
+	void doAction(ITokCollection*& pTc)
+	{
+		//remove the anonymous node
+		_pRepos->AST()->removeCurrNode();
+
+		//Add the function node to current scope node
+		std::string name = (*pTc)[pTc->find("class") + 1];
+		ASTNode* node = new ASTNode();
+		node->setNodeName(name);
+		node->setNodeType("class");
+		node->setLineStart(_pRepos->lineCount());
+		_pRepos->AST()->addChild(node);
+	}
+};
+//----Action: Print class definition----------------------------
+class PrintClass: public IAction {
+	Repository* _pRepos;
+public:
+	void doAction(ITokCollection*& pTc)
+	{
+		std::string name = (*pTc)[pTc->find("class") + 1];
+		std::cout << "\n  class: " << name;
+	}
+};
+
+//--- Rule: Detect function -------------------------------------
 class FunctionDefinition : public IRule
 {
 public:
@@ -252,7 +434,7 @@ public:
   bool doTest(ITokCollection*& pTc)
   {
     ITokCollection& tc = *pTc;
-    if(tc[tc.length()-1] == "{")
+    if(tc[tc.length()-1] == "{")       
     {
       size_t len = tc.find("(");
       if(len < tc.length() && !isSpecialKeyWord(tc[len-1]))
@@ -261,13 +443,10 @@ public:
         return true;
       }
     }
-    return true;
+    return false;
   }
 };
-
-///////////////////////////////////////////////////////////////
-// action to push function name onto ScopeStack
-
+//--- Action: Push function to ScopeStack (Rule: FunctionDefinition)--------
 class PushFunction : public IAction
 {
   Repository* p_Repos;
@@ -281,7 +460,7 @@ public:
     // next statement is now  handled in PrintFunction
     // std::cout << "\n  FunctionDef: " << pTc->show();
 
-    // pop anonymous scope
+    //pop anonymous scope
     p_Repos->scopeStack().pop();
 
     // push function scope
@@ -293,11 +472,30 @@ public:
     p_Repos->scopeStack().push(elem);
   }
 };
+//----Action: Add new Function Node to AST (Rule: FunctionDefinition)--------
+class AddFunctionNode : public IAction
+{
+	Repository* _pRepos;
+public:
+	AddFunctionNode(Repository* pRepos)
+	{
+		_pRepos = pRepos;
+	}
+	void doAction(ITokCollection*& pTc)
+	{
+		//remove the anonymous node
+		_pRepos->AST()->removeCurrNode();
 
-///////////////////////////////////////////////////////////////
-// action to send semi-expression that starts a function def
-// to console
-
+		//Add the function node to current scope node
+		std::string name = (*pTc)[pTc->find("(") - 1];
+		ASTNode* node = new ASTNode();
+		node->setNodeName(name);
+		node->setNodeType("function");
+		node->setLineStart(_pRepos->lineCount());
+		_pRepos->AST()->addChild(node);
+	}
+};
+//--  Action: Print function definition (Rule: FunctionDefinition)--------------
 class PrintFunction : public IAction
 {
   Repository* p_Repos;
@@ -311,10 +509,7 @@ public:
     std::cout << "\n  FuncDef: " << pTc->show().c_str();
   }
 };
-
-///////////////////////////////////////////////////////////////
-// action to send signature of a function def to console
-
+//--- Action: To send signature of a function def to console (Rule: FunctionDefinition----
 class PrettyPrintFunction : public IAction
 {
 public:
@@ -331,9 +526,7 @@ public:
   }
 };
 
-///////////////////////////////////////////////////////////////
-// rule to detect declaration
-
+//----Rule: To detect declaration-----------------------------------------------
 class Declaration : public IRule          // declar ends in semicolon
 {                                         // has type, name, modifiers &
 public:                                   // initializers.  So eliminate
@@ -435,10 +628,7 @@ public:                                   // initializers.  So eliminate
     return true;
   }
 };
-
-///////////////////////////////////////////////////////////////
-// action to show declaration
-
+//----Action: To show declaration (Rule: Declaration)------------------------------------
 class ShowDeclaration : public IAction
 {
 public:
@@ -455,9 +645,7 @@ public:
   }
 };
 
-///////////////////////////////////////////////////////////////
-// rule to detect executable
-
+//----Rule: Detect Executable stmts -----------------------------------------------------
 class Executable : public IRule           // declar ends in semicolon
 {                                         // has type, name, modifiers &
 public:                                   // initializers.  So eliminate
@@ -560,10 +748,7 @@ public:                                   // initializers.  So eliminate
     return true;
   }
 };
-
-///////////////////////////////////////////////////////////////
-// action to show executable
-
+//----Action: Print executable (Rule: Executable) ---------------------------------------
 class ShowExecutable : public IAction
 {
 public:

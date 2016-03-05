@@ -17,7 +17,7 @@
 #include "ConfigureParser.h"
 
 using namespace Scanner;
-
+using namespace AST;
 //----< destructor releases all parts >------------------------------
 
 ConfigParseToConsole::~ConfigParseToConsole()
@@ -26,11 +26,14 @@ ConfigParseToConsole::~ConfigParseToConsole()
 
   delete pHandlePush;
   delete pBeginningOfScope;
+  delete pAddScopeNode;
   delete pHandlePop;
   delete pEndOfScope;
+  delete pMoveToParentNode;
   delete pPrintFunction;
   delete pPushFunction;
   delete pFunctionDefinition;
+  delete pAddFunctionNode;
   delete pDeclaration;
   delete pShowDeclaration;
   delete pExecutable;
@@ -65,7 +68,8 @@ Parser* ConfigParseToConsole::Build()
     pToker->returnComments(false);
     pSemi = new SemiExp(pToker);
     pParser = new Parser(pSemi);
-    pRepo = new Repository(pToker);
+	pAst = new ASTree();
+    pRepo = new Repository(pToker,pAst);
 
     // configure to manage scope
     // these must come first - they return true on match
@@ -73,29 +77,40 @@ Parser* ConfigParseToConsole::Build()
 
     pBeginningOfScope = new BeginningOfScope();
     pHandlePush = new HandlePush(pRepo);
+	pAddScopeNode = new AddScopeNode(pRepo);
     pBeginningOfScope->addAction(pHandlePush);
+	pBeginningOfScope->addAction(pAddScopeNode);
     pParser->addRule(pBeginningOfScope);
+
     pEndOfScope = new EndOfScope();
     pHandlePop = new HandlePop(pRepo);
+	pMoveToParentNode = new MoveToParentNode(pRepo);
     pEndOfScope->addAction(pHandlePop);
+	pEndOfScope->addAction(pMoveToParentNode);
     pParser->addRule(pEndOfScope);
+
+	pClassDefinition = new ClassDefinition();
+	pAddClassNode = new AddClassNode(pRepo);
+	pClassDefinition->addAction(pAddClassNode);
+	pParser->addRule(pClassDefinition);
 
     // configure to detect and act on function definitions
     // these will stop further rule checking by returning false
-
     pFunctionDefinition = new FunctionDefinition;
     pPushFunction = new PushFunction(pRepo);  // no action
     pPrintFunction = new PrintFunction(pRepo);
+	pAddFunctionNode = new AddFunctionNode(pRepo);
     pFunctionDefinition->addAction(pPushFunction);
     pFunctionDefinition->addAction(pPrintFunction);
+	pFunctionDefinition->addAction(pAddFunctionNode);
     pParser->addRule(pFunctionDefinition);
 
     // configure to detect and act on declarations and Executables
-
     pDeclaration = new Declaration;
     pShowDeclaration = new ShowDeclaration;
     pDeclaration->addAction(pShowDeclaration);
     pParser->addRule(pDeclaration);
+	// Executable rule and related action
     pExecutable = new Executable;
     pShowExecutable = new ShowExecutable;
     pExecutable->addAction(pShowExecutable);

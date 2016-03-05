@@ -12,7 +12,8 @@ using NodePtr = ASTNode*;
 ASTree::ASTree()
 {
 	_root = new ASTNode();
-	_root->setNodeName("Root");
+	_root->setNodeName("global");
+	_root->setNodeType("namespace");
 	_curr = _root;
 }
 
@@ -66,6 +67,13 @@ void ASTree::DFS(NodePtr& node)
 	}
 }
 
+//----------remove the current node ------------------------------------//
+void ASTree::removeCurrNode()
+{
+	NodePtr temp = this->curr();
+	this->moveToParent();
+	_curr->removeChild(temp);
+}
 
 
 #ifdef TEST_AST
@@ -121,6 +129,10 @@ int main(int argc, char* argv[])
 
 	_ast.addChild(n2);
 	_ast.addChild(n5);
+
+	_ast.walkTree();
+
+	_ast.removeCurrNode();
 
 	_ast.walkTree();
 

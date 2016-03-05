@@ -234,8 +234,8 @@ int main()
   std::cout << "\n =======================\n";
 
   Toker toker;
-  //std::string fileSpec = "../Tokenizer/Tokenizer.cpp";
-  std::string fileSpec = "SemiExp.cpp";
+  std::string fileSpec = "../../Tokenizer/Tokenizer.cpp";
+  //std::string fileSpec = "../../SemiExp/SemiExp.cpp";
 
   std::fstream in(fileSpec);
   if (!in.good())
