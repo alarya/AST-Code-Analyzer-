@@ -1,12 +1,8 @@
-﻿  ActionsAndRules.cpp
+﻿  ConfigureParser.cpp
 e:\syracuse(spring2016)\ood\project2\project2helper\parser\actionsandrules.h(521): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   Generating Code...
-e:\syracuse(spring2016)\ood\project2\project2helper\parser\actionsandrules.cpp(78): warning C4715: 'testParsing': not all control paths return a value
-e:\syracuse(spring2016)\ood\project2\project2helper\parser\actionsandrules.cpp(172): warning C4715: 'testAST': not all control paths return a value
   Compiling...
   Parser.cpp
-e:\syracuse(spring2016)\ood\project2\project2helper\parser\actionsandrules.h(521): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-  ConfigureParser.cpp
 e:\syracuse(spring2016)\ood\project2\project2helper\parser\actionsandrules.h(521): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   Generating Code...
   Parser.vcxproj -> E:\Syracuse(Spring2016)\OOD\Project2\Project2Helper\x64\Debug\Parser.exe

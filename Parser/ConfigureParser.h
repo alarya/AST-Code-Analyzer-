@@ -111,5 +111,55 @@ private:
   ConfigParseToConsole& operator=(const ConfigParseToConsole&) = delete;
 };
 
+class ConfigParserForAST : IBuilder
+{
+public:
+	ConfigParserForAST() {};
+	~ConfigParserForAST();
+	bool Attach(const std::string& name, bool isFile = true);
+	Parser* Build();
+	ASTree* AST() { return pAst; }
+private:
+	// Builder must hold onto all the pieces
 
+	std::ifstream* pIn;
+	Scanner::Toker* pToker;
+	Scanner::SemiExp* pSemi;
+	Parser* pParser;
+	Repository* pRepo;
+	ASTree* pAst;
+
+	// add Rules and Actions
+	//Rules
+	BeginningOfScope* pBeginningOfScope;
+	EndOfScope* pEndOfScope;
+	ClassDefinition* pClassDefinition;
+	FunctionDefinition* pFunctionDefinition;
+	Declaration* pDeclaration;
+	Executable* pExecutable;
+
+	//Actions
+	HandlePush* pHandlePush;
+	AddScopeNode* pAddScopeNode;
+
+	HandlePop* pHandlePop;
+	MoveToParentNode* pMoveToParentNode;
+
+	PushClass* pPushClass;
+	AddClassNode* pAddClassNode;
+
+	PushFunction* pPushFunction;
+	AddFunctionNode* pAddFunctionNode;
+	PrintFunction* pPrintFunction;
+
+	ShowDeclaration* pShowDeclaration;
+
+	ShowExecutable* pShowExecutable;
+
+	// prohibit copies and assignments
+
+	ConfigParserForAST(const ConfigParseToConsole&) = delete;
+	ConfigParserForAST& operator=(const ConfigParseToConsole&) = delete;
+
+};
 #endif

@@ -83,8 +83,8 @@ int testAST()
 	
 	try
 	{
-		char* fileName = "ActionsAndRules.h";
-		//char* fileName = "ASTNode.h";
+		//char* fileName = "ActionsAndRules.h";
+		char* fileName = "ASTNode.h";
 
 		std::ifstream in(fileName);
 		if (!in.good())

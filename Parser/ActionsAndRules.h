@@ -221,7 +221,7 @@ public:
       //std::cout << "\nHandlePop";
       //std::cout << "\n--popping at line count = " << p_Repos->lineCount();
       //std::cout << "\n  Function " << elem.name << ", lines = " << p_Repos->lineCount() - elem.lineCount + 1;
-      std::cout << "\n";
+      //std::cout << "\n";
     }
   }
 };

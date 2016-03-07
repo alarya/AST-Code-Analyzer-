@@ -30,6 +30,10 @@ public:
 	void setNodeName(std::string _name) { name = _name; }
 	void setLineStart(size_t _start) { startLineCount = _start; }
 	void setLineEnd(size_t _end) { endLineCount = _end; }
+	std::string nodeType(){ return type; }
+	std::string nodeName() { return name; }
+	size_t startLine() { return startLineCount; }
+	size_t endLine() { return endLineCount; }
 	int noOfChildren();
 private:
 	std::string type;

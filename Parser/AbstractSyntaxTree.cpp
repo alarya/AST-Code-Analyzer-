@@ -26,7 +26,6 @@ ASTree::ASTree(NodePtr& root)
 //---------------Dtor--------------------------------//
 ASTree::~ASTree()
 {
-	//delete all nodes
 	delete _root;
 }
 
@@ -50,21 +49,55 @@ bool ASTree::hasChild(NodePtr& node)
 //------------Depth First search walk in the AST -------------------------//
 void ASTree::walkTree()
 {
+	level = 0;
 	DFS(_root);
 }
 
 //-----------recursive function to print all nodes ----------------------//
 void ASTree::DFS(NodePtr& node)
 {
-	node->showNodeInfo();
+	std::string indent;
+	for (int i = 0; i < level; i++)
+	{
+		indent += ">> ";
+	}
+	
+	//node->showNodeInfo();
+	std::cout << indent << "Type: " << node->nodeType() << "\n" ;
+	std::cout << indent << "Name: " << node->nodeName() << "\n" ;
+	std::cout << indent << "Start Line: " <<node->startLine()<< "\n";
+	std::cout << indent << "End Line: " << node->endLine() << "\n";
+	std::cout << "\n";
+
+	++level;
 
 	if (!hasChild(node))
+	{
+		--level;
 		return;
+	}
 
 	for each(auto child in node->children())
 	{
 		DFS(child);
 	}
+
+	--level;
+}
+
+//--------print the tree------------------------------------------------//
+void ASTree::printTree()
+{
+
+	//std::vector<NodePtr>* tree;
+
+	//tree->push_back(_root);
+
+}
+
+void ASTree::BFS(NodePtr& node) 
+{
+
 }
 
 //----------remove the current node ------------------------------------//

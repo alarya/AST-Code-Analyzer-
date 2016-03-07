@@ -1,4 +1,3 @@
-﻿  MetricExecutive.cpp
-  MetricAnalyzer.cpp
-  Generating Code...
+﻿  MetricAnalyzer.cpp
+e:\syracuse(spring2016)\ood\project2\project2helper\parser\actionsandrules.h(521): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   MetricAnalyzer.vcxproj -> E:\Syracuse(Spring2016)\OOD\Project2\Project2Helper\x64\Debug\MetricAnalyzer.exe

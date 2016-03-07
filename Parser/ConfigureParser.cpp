@@ -18,6 +18,8 @@
 
 using namespace Scanner;
 using namespace AST;
+
+
 //----< destructor releases all parts >------------------------------
 
 ConfigParseToConsole::~ConfigParseToConsole()
@@ -124,6 +126,93 @@ Parser* ConfigParseToConsole::Build()
     return 0;
   }
 }
+
+//----< destructor releases all parts >------------------------------
+
+ConfigParserForAST::~ConfigParserForAST()
+{
+	// when Builder goes out of scope, everything must be deallocated
+
+	delete pHandlePush;
+	delete pBeginningOfScope;
+	delete pAddScopeNode;
+	delete pHandlePop;
+	delete pEndOfScope;
+	delete pMoveToParentNode;
+	delete pPushFunction;
+	delete pFunctionDefinition;
+	delete pAddFunctionNode;
+	delete pRepo;
+	delete pParser;
+	delete pSemi;
+	delete pToker;
+	pIn->close();
+	delete pIn;
+}
+//----< attach toker to a file stream or stringstream >------------
+
+bool ConfigParserForAST::Attach(const std::string& name, bool isFile)
+{
+	if (pToker == 0)
+		return false;
+	pIn = new std::ifstream(name);
+	if (!pIn->good())
+		return false;
+	return pToker->attach(pIn);
+}
+//----< Here's where alll the parts get assembled >----------------
+
+Parser* ConfigParserForAST::Build()
+{
+	try
+	{
+		// add Parser's main parts
+		pToker = new Toker;
+		pToker->returnComments(false);
+		pSemi = new SemiExp(pToker);
+		pParser = new Parser(pSemi);
+		pAst = new ASTree();
+		pRepo = new Repository(pToker, pAst);
+
+		// configure to manage scope
+		// these must come first - they return true on match
+		// so rule checking continues
+
+		pBeginningOfScope = new BeginningOfScope();
+		pHandlePush = new HandlePush(pRepo);
+		pAddScopeNode = new AddScopeNode(pRepo);
+		pBeginningOfScope->addAction(pHandlePush);
+		pBeginningOfScope->addAction(pAddScopeNode);
+		pParser->addRule(pBeginningOfScope);
+
+		pEndOfScope = new EndOfScope();
+		pHandlePop = new HandlePop(pRepo);
+		pMoveToParentNode = new MoveToParentNode(pRepo);
+		pEndOfScope->addAction(pHandlePop);
+		pEndOfScope->addAction(pMoveToParentNode);
+		pParser->addRule(pEndOfScope);
+
+		pClassDefinition = new ClassDefinition();
+		pAddClassNode = new AddClassNode(pRepo);
+		pClassDefinition->addAction(pAddClassNode);
+		pParser->addRule(pClassDefinition);
+
+		pFunctionDefinition = new FunctionDefinition;
+		pPushFunction = new PushFunction(pRepo);  
+		pAddFunctionNode = new AddFunctionNode(pRepo);
+		pFunctionDefinition->addAction(pPushFunction);
+		pFunctionDefinition->addAction(pAddFunctionNode);
+		pParser->addRule(pFunctionDefinition);
+
+		return pParser;
+  }
+	catch (std::exception& ex)
+	{
+		std::cout << "\n\n  " << ex.what() << "\n\n";
+		return 0;
+	}
+}
+
 
 #ifdef TEST_CONFIGUREPARSER
 

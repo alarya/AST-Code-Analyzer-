@@ -100,7 +100,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;TEST_ANALYZER;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -145,10 +145,31 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\FileSystem-Windows\FileSystemDemo\FileSystem.h" />
+    <ClInclude Include="..\Parser\AbstractSyntaxTree.h" />
+    <ClInclude Include="..\Parser\ActionsAndRules.h" />
+    <ClInclude Include="..\Parser\ASTNode.h" />
+    <ClInclude Include="..\Parser\ConfigureParser.h" />
+    <ClInclude Include="..\Parser\Parser.h" />
+    <ClInclude Include="..\ScopeStack\ScopeStack.h" />
+    <ClInclude Include="..\SemiExp\itokcollection.h" />
+    <ClInclude Include="..\SemiExp\SemiExp.h" />
+    <ClInclude Include="..\Tokenizer\Tokenizer.h" />
+    <ClInclude Include="..\Utilities\Utilities.h" />
     <ClInclude Include="MetricAnalyzer.h" />
     <ClInclude Include="MetricExecutive.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\FileSystem-Windows\FileSystemDemo\FileSystem.cpp" />
+    <ClCompile Include="..\Parser\AbstractSyntaxTree.cpp" />
+    <ClCompile Include="..\Parser\ActionsAndRules.cpp" />
+    <ClCompile Include="..\Parser\ASTNode.cpp" />
+    <ClCompile Include="..\Parser\ConfigureParser.cpp" />
+    <ClCompile Include="..\Parser\Parser.cpp" />
+    <ClCompile Include="..\ScopeStack\ScopeStack.cpp" />
+    <ClCompile Include="..\SemiExp\SemiExp.cpp" />
+    <ClCompile Include="..\Tokenizer\Tokenizer.cpp" />
+    <ClCompile Include="..\Utilities\Utilities.cpp" />
     <ClCompile Include="MetricAnalyzer.cpp" />
     <ClCompile Include="MetricExecutive.cpp" />
   </ItemGroup>

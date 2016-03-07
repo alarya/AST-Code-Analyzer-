@@ -91,6 +91,7 @@ void ASTNode::removeChild(NodePtr child)
 	delete child;
 
 }
+
 #ifdef TEST_ASTNODE
 
 int main(int argc, char* argv[])
