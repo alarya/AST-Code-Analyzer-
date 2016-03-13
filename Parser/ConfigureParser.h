@@ -2,7 +2,7 @@
 #define CONFIGUREPARSER_H
 /////////////////////////////////////////////////////////////////////
 //  ConfigureParser.h - builds and configures parsers              //
-//  ver 2.1                                                        //
+//  ver 2.2                                                        //
 //                                                                 //
 //  Lanaguage:     Visual C++ 2005                                 //
 //  Platform:      Dell Dimension 9150, Windows XP SP2             //
@@ -37,6 +37,8 @@
 
   Maintenance History:
   ====================
+  ver 2.2 : 13 March 16
+  - Added a builder to build parser with AST for code analysis
   ver 2.1 : 19 Feb 16
   - Added PrintFunction action to FunctionDefinition rule
   ver 2.0 : 01 Jun 11
@@ -52,7 +54,7 @@
 #include "../SemiExp/SemiExp.h"
 #include "../Tokenizer/Tokenizer.h"
 #include "ActionsAndRules.h"
-#include "AbstractSyntaxTree.h"
+#include "../AST/AbstractSyntaxTree.h"
 
 using namespace AST;
 

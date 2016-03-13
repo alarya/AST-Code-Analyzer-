@@ -18,12 +18,17 @@ void MetricAnalyzer::Analyze(std::string fileName)
 	_parser = builder->Build();
 	if (builder->Attach(fileName, true))
 	{
-		std::cout << "\nAnalyzing file: " << fileName << "\n";
+		std::cout << "\n\n\n\nFile: " << fileName << "\n";
 		while (_parser->next())
 		{
 			_parser->parse();
 		}
+
+		std::cout << "\nTree----------------------------------------\n" ;
 		builder->AST()->printTree();
+		std::cout << "\n Function Summary: \n";
+		std::cout << "---------------------\n";
+		builder->AST()->functionMetrics();
 	}
 	else
 	{

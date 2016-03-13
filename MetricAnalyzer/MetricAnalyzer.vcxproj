@@ -145,11 +145,11 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\AST\AbstractSyntaxTree.h" />
+    <ClInclude Include="..\AST\ASTNode.h" />
     <ClInclude Include="..\FileMgr\FileMgr.h" />
     <ClInclude Include="..\FileSystem-Windows\FileSystemDemo\FileSystem.h" />
-    <ClInclude Include="..\Parser\AbstractSyntaxTree.h" />
     <ClInclude Include="..\Parser\ActionsAndRules.h" />
-    <ClInclude Include="..\Parser\ASTNode.h" />
     <ClInclude Include="..\Parser\ConfigureParser.h" />
     <ClInclude Include="..\Parser\Parser.h" />
     <ClInclude Include="..\ScopeStack\ScopeStack.h" />
@@ -161,11 +161,11 @@
     <ClInclude Include="MetricExecutive.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\AST\AbstractSyntaxTree.cpp" />
+    <ClCompile Include="..\AST\ASTNode.cpp" />
     <ClCompile Include="..\FileMgr\FileMgr.cpp" />
     <ClCompile Include="..\FileSystem-Windows\FileSystemDemo\FileSystem.cpp" />
-    <ClCompile Include="..\Parser\AbstractSyntaxTree.cpp" />
     <ClCompile Include="..\Parser\ActionsAndRules.cpp" />
-    <ClCompile Include="..\Parser\ASTNode.cpp" />
     <ClCompile Include="..\Parser\ConfigureParser.cpp" />
     <ClCompile Include="..\Parser\Parser.cpp" />
     <ClCompile Include="..\ScopeStack\ScopeStack.cpp" />

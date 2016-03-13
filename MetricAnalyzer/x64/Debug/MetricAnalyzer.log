@@ -1,7 +1,2 @@
-﻿  ConfigureParser.cpp
-  Generating Code...
-  Skipping... (no relevant changes detected)
-  MetricExecutive.cpp
-  MetricAnalyzer.cpp
-  Parser.cpp
+﻿  AbstractSyntaxTree.cpp
   MetricAnalyzer.vcxproj -> E:\Syracuse(Spring2016)\OOD\Project2\Project2Helper\x64\Debug\MetricAnalyzer.exe

@@ -63,8 +63,8 @@
 #include "../ScopeStack/ScopeStack.h"
 #include "../Tokenizer/Tokenizer.h"
 #include "../SemiExp/SemiExp.h"
-#include "AbstractSyntaxTree.h"
-#include "ASTNode.h"
+#include "../AST/AbstractSyntaxTree.h"
+#include "../AST/ASTNode.h"
 
 using namespace Scanner;
 using namespace AST;
@@ -796,6 +796,20 @@ public:                                   // initializers.  So eliminate
       tc.remove(start);
     //std::cout << "\n  -- " << tc.show();
   }
+  void filterSemi(ITokCollection& tc, SemiExp* se)
+  {
+	  for (size_t i = 0; i < tc.length(); ++i)
+	  {
+		  if (isModifier(tc[i]))
+			  continue;
+		  if (se->isComment(tc[i]) || tc[i] == "\n" || tc[i] == "return")
+			  continue;
+		  if (tc[i] == "=" || tc[i] == ";")
+			  break;
+		  else
+			  se->push_back(tc[i]);
+	  }
+  }
   bool doTest(ITokCollection*& pTc)
   {
     ITokCollection& in = *pTc;
@@ -812,17 +826,8 @@ public:                                   // initializers.  So eliminate
       // remove modifiers, comments, newlines, returns, and initializers
 
       Scanner::SemiExp se;
-      for (size_t i = 0; i < tc.length(); ++i)
-      {
-        if (isModifier(tc[i]))
-          continue;
-        if (se.isComment(tc[i]) || tc[i] == "\n" || tc[i] == "return")
-          continue;
-        if (tc[i] == "=" || tc[i] == ";")
-          break;
-        else
-          se.push_back(tc[i]);
-      }
+	  filterSemi(tc,&se);
+
       //std::cout << "\n  ** " << se.show();
       if (se.length() == 2)  // type & name, so declaration
       {
@@ -918,6 +923,20 @@ public:                                   // initializers.  So eliminate
       tc.remove(start);
     //std::cout << "\n  -- " << tc.show();
   }
+  void filterSemi(ITokCollection& tc, SemiExp* se)
+  {
+	  for (size_t i = 0; i < tc.length(); ++i)
+	  {
+		  if (isModifier(tc[i]))
+			  continue;
+		  if (se->isComment(tc[i]) || tc[i] == "\n" || tc[i] == "return")
+			  continue;
+		  if (tc[i] == "=" || tc[i] == ";")
+			  break;
+		  else
+			  se->push_back(tc[i]);
+	  }
+  }
   bool doTest(ITokCollection*& pTc)
   {
     ITokCollection& in = *pTc;
@@ -932,19 +951,9 @@ public:                                   // initializers.  So eliminate
       condenseTemplateTypes(tc);
 
       // remove modifiers, comments, newlines, returns, and initializers
-
       Scanner::SemiExp se;
-      for (size_t i = 0; i < tc.length(); ++i)
-      {
-        if (isModifier(tc[i]))
-          continue;
-        if (se.isComment(tc[i]) || tc[i] == "\n" || tc[i] == "return")
-          continue;
-        if (tc[i] == "=" || tc[i] == ";")
-          break;
-        else
-          se.push_back(tc[i]);
-      }
+	  filterSemi(tc,&se);
+
       //std::cout << "\n  ** " << se.show();
       if (se.length() != 2)  // not a declaration
       {

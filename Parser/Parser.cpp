@@ -84,21 +84,18 @@ int main(int argc, char* argv[])
   putline();
 
   // collecting tokens from files, named on the command line
-
   if(argc < 2)
   {
     std::cout 
       << "\n  please enter name of file to process on command line\n\n";
     return 1;
   }
-
   for(int i=1; i<argc; ++i)
   {
     std::string fileSpec = FileSystem::Path::getFullFileSpec(argv[i]);
     std::string msg = "Processing file" + fileSpec;
     Util::title(msg);
     putline();
-
     ConfigParseToConsole configure;
     Parser* pParser = configure.Build();
     try
@@ -117,7 +114,6 @@ int main(int argc, char* argv[])
         return 1;
       }
       // now that parser is built, use it
-
       while(pParser->next())
         pParser->parse();
       std::cout << "\n";
@@ -128,8 +124,6 @@ int main(int argc, char* argv[])
     }
   }
   std::cout << "\n";
-
-  
 }
 
 #endif

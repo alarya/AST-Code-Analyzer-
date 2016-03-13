@@ -59,45 +59,28 @@ int main()
 {
   std::cout << "\n  Testing Scope Stack";
   std::cout << "\n =====================\n";
-
   std::cout << "\n  pushing items onto ScopeStack instance after adding startLineCount";
   std::cout << "\n --------------------------------------------------------------------";
-
   ScopeStack<element*> testStack;
   element* pItem = new element;
-
   pItem->type = "function";
   pItem->name = "fun1";
   pItem->startLineCount = 33;
   testStack.push(pItem);
-
   pItem = new element;
   pItem->type = "if";
   pItem->name = "";
   pItem->startLineCount = 38;
   (testStack.top()->_children).push_back(pItem);
   testStack.push(pItem);
-
-  pItem = new element;
-  pItem->type = "for";
-  pItem->name = "";
-  pItem->startLineCount = 40;
-  (testStack.top()->_children).push_back(pItem);
-  testStack.push(pItem);
-
-
   showStack<element>(testStack, false);
   std::cout << std::endl;
-
   std::cout << "\n  Popping two items off ScopeStack after adding endLineCount";
   std::cout << "\n ------------------------------------------------------------";
-
   testStack.top()->endLineCount = 50;
   std::cout << "\n  " << testStack.pop()->show();
   testStack.top()->endLineCount = 55;
   std::cout << "\n  " << testStack.pop()->show();
-  std::cout << "\n";
-
   std::cout << "\n  Pushing another item onto ScopeStack after adding startLineElement";
   std::cout << "\n --------------------------------------------------------------------";
   pItem = new element;
@@ -106,14 +89,10 @@ int main()
   pItem->startLineCount = 60;
   (testStack.top()->_children).push_back(pItem);
   testStack.push(pItem);
-
   std::cout << "\n  Stack now contains:";
-  std::cout << "\n ---------------------";
   showStack<element>(testStack, false);
   std::cout << "\n";
-
   std::cout << "\n  Popping last elements off stack after adding endLineCount";
-  std::cout << "\n -----------------------------------------------------------";
   testStack.top()->endLineCount = 70;
   element* pTop = testStack.pop();
   std::cout << "\n  " << pTop->show();
@@ -121,11 +100,9 @@ int main()
   pTop = testStack.pop();
   std::cout << "\n  " << pTop->show();
   std::cout << "\n";
-
   std::cout << "\n  Walking simulated AST tree:";
   std::cout << "\n -----------------------------";
   TreeWalk(pTop);
-  std::cout << "\n\n";
 }
 
 #endif

@@ -1,11 +1,12 @@
 /////////////////////////////////////////////////////////////////////
-//  ConfigureParser.cpp - builds and configures parsers            //
-//  ver 2.1                                                        //
+//  ConfigureParser.h - builds and configures parsers              //
+//  ver 2.2                                                        //
 //                                                                 //
 //  Lanaguage:     Visual C++ 2005                                 //
 //  Platform:      Dell Dimension 9150, Windows XP SP2             //
 //  Application:   Prototype for CSE687 Pr1, Sp06                  //
-//  Author:        Jim Fawcett, CST 2-187, Syracuse University     //
+//  Modified by:   Alok Arya  (alarya@syr.edu)                     //
+//  Original Author: Jim Fawcett, CST 2-187, Syracuse University   //
 //                 (315) 443-3948, jfawcett@twcny.rr.com           //
 /////////////////////////////////////////////////////////////////////
 
@@ -21,7 +22,6 @@ using namespace AST;
 
 
 //----< destructor releases all parts >------------------------------
-
 ConfigParseToConsole::~ConfigParseToConsole()
 {
   // when Builder goes out of scope, everything must be deallocated
@@ -62,8 +62,6 @@ Parser* ConfigParseToConsole::Build()
 {
   try
   {
-    // add Parser's main parts
-
     pToker = new Toker;
     pToker->returnComments(false);
     pSemi = new SemiExp(pToker);
@@ -71,51 +69,34 @@ Parser* ConfigParseToConsole::Build()
 	pAst = new ASTree();
     pRepo = new Repository(pToker,pAst);
 
-    // configure to manage scope
-    // these must come first - they return true on match
-    // so rule checking continues
-
     pBeginningOfScope = new BeginningOfScope();
     pHandlePush = new HandlePush(pRepo);
-	pAddScopeNode = new AddScopeNode(pRepo);
     pBeginningOfScope->addAction(pHandlePush);
-	pBeginningOfScope->addAction(pAddScopeNode);
     pParser->addRule(pBeginningOfScope);
 
     pEndOfScope = new EndOfScope();
     pHandlePop = new HandlePop(pRepo);
-	pMoveToParentNode = new MoveToParentNode(pRepo);
     pEndOfScope->addAction(pHandlePop);
-	pEndOfScope->addAction(pMoveToParentNode);
     pParser->addRule(pEndOfScope);
 
 	pClassDefinition = new ClassDefinition();
 	pAddClassNode = new AddClassNode(pRepo);
 	pClassDefinition->addAction(pAddClassNode);
 	pParser->addRule(pClassDefinition);
-
-    // configure to detect and act on function definitions
-    // these will stop further rule checking by returning false
     pFunctionDefinition = new FunctionDefinition;
     pPushFunction = new PushFunction(pRepo);  // no action
     pPrintFunction = new PrintFunction(pRepo);
-	pAddFunctionNode = new AddFunctionNode(pRepo);
     pFunctionDefinition->addAction(pPushFunction);
     pFunctionDefinition->addAction(pPrintFunction);
-	pFunctionDefinition->addAction(pAddFunctionNode);
     pParser->addRule(pFunctionDefinition);
-
-    // configure to detect and act on declarations and Executables
     pDeclaration = new Declaration;
     pShowDeclaration = new ShowDeclaration;
     pDeclaration->addAction(pShowDeclaration);
     pParser->addRule(pDeclaration);
-	// Executable rule and related action
     pExecutable = new Executable;
     pShowExecutable = new ShowExecutable;
     pExecutable->addAction(pShowExecutable);
     pParser->addRule(pExecutable);
-
     return pParser;
   }
   catch(std::exception& ex)
@@ -128,33 +109,20 @@ Parser* ConfigParseToConsole::Build()
 //----< destructor releases all parts >------------------------------
 ConfigParserForAST::~ConfigParserForAST()
 {
+	//rules take care of deleting their actions
 	delete pBeginningOfScope;
-	delete pHandlePush;
-	delete pAddScopeNode;
 		
 	delete pEndOfScope;
-	delete pHandlePop;
-	delete pMoveToParentNode;
 	
 	delete pNameSpaceDefinition;
-	delete pPushNamespace;
-	delete pAddNamespaceNode;
 
 	delete pClassDefinition;
-	delete pPushClass;
-	delete pAddClassNode;
 
 	delete pStructDefinition;
-	delete pPushStruct;
-	delete pAddStructNode;
 
 	delete pFunctionDefinition;
-	delete pPushFunction;
-	delete pAddFunctionNode;
 
 	delete pOtherScopes;
-	delete pAddOtherScopeNode;
-	delete pPushOtherScopes;
 
 	delete pRepo;
 	delete pParser;
@@ -174,7 +142,79 @@ bool ConfigParserForAST::Attach(const std::string& name, bool isFile)
 		return false;
 	return pToker->attach(pIn);
 }
-//----< Here's where alll the parts get assembled >----------------
+
+/*Configure rules for parser: helper functions*/
+BeginningOfScope* configureRuleForStartScope(Parser* pParser, Repository* pRepo)
+{
+	BeginningOfScope* pBeginningOfScope = new BeginningOfScope();
+	HandlePush* pHandlePush = new HandlePush(pRepo);
+	AddScopeNode* pAddScopeNode = new AddScopeNode(pRepo);
+	pBeginningOfScope->addAction(pHandlePush);
+	pBeginningOfScope->addAction(pAddScopeNode);
+	pParser->addRule(pBeginningOfScope);
+	return pBeginningOfScope;
+}
+EndOfScope* configureRuleForEndScope(Parser* pParser, Repository* pRepo)
+{
+	EndOfScope* pEndOfScope = new EndOfScope();
+	HandlePop* pHandlePop = new HandlePop(pRepo);
+	MoveToParentNode* pMoveToParentNode = new MoveToParentNode(pRepo);
+	pEndOfScope->addAction(pHandlePop);
+	pEndOfScope->addAction(pMoveToParentNode);
+	pParser->addRule(pEndOfScope);
+	return pEndOfScope;
+}
+NameSpaceDefinition* configureRuleForNameSpaces(Parser* pParser, Repository* pRepo)
+{
+	NameSpaceDefinition* pNameSpaceDefinition = new NameSpaceDefinition();
+	PushNamespace* pPushNamespace = new PushNamespace(pRepo);
+	AddNamespaceNode* pAddNamespaceNode = new AddNamespaceNode(pRepo);
+	pNameSpaceDefinition->addAction(pPushNamespace);
+	pNameSpaceDefinition->addAction(pAddNamespaceNode);
+	pParser->addRule(pNameSpaceDefinition);
+	return pNameSpaceDefinition;
+}
+ClassDefinition* configureRuleForClass(Parser* pParser, Repository* pRepo)
+{
+	ClassDefinition* pClassDefinition = new ClassDefinition();
+	PushClass* pPushClass = new PushClass(pRepo);
+	AddClassNode* pAddClassNode = new AddClassNode(pRepo);
+	pClassDefinition->addAction(pPushClass);
+	pClassDefinition->addAction(pAddClassNode);
+	pParser->addRule(pClassDefinition);
+	return pClassDefinition;
+}
+StructDefinition* configureRuleForStruct(Parser* pParser, Repository* pRepo)
+{
+	StructDefinition* pStructDefinition = new StructDefinition();
+	PushStruct* pPushStruct = new PushStruct(pRepo);
+	AddStructNode* pAddStructNode = new AddStructNode(pRepo);
+	pStructDefinition->addAction(pPushStruct);
+	pStructDefinition->addAction(pAddStructNode);
+	pParser->addRule(pStructDefinition);
+	return pStructDefinition;
+}
+FunctionDefinition* configureRuleForFunction(Parser* pParser, Repository* pRepo)
+{
+	FunctionDefinition* pFunctionDefinition = new FunctionDefinition();
+	PushFunction* pPushFunction = new PushFunction(pRepo);
+	AddFunctionNode* pAddFunctionNode = new AddFunctionNode(pRepo);
+	pFunctionDefinition->addAction(pPushFunction);
+	pFunctionDefinition->addAction(pAddFunctionNode);
+	pParser->addRule(pFunctionDefinition);
+	return pFunctionDefinition;
+}
+OtherScopes* configureRuleForOtherScope(Parser* pParser, Repository* pRepo)
+{
+	OtherScopes* pOtherScopes = new OtherScopes();
+	PushOtherScopes* pPushOtherScopes = new PushOtherScopes(pRepo);
+	AddOtherScopeNode* pAddOtherScopeNode = new AddOtherScopeNode(pRepo);
+	pOtherScopes->addAction(pPushOtherScopes);
+	pOtherScopes->addAction(pAddOtherScopeNode);
+	pParser->addRule(pOtherScopes);
+	return pOtherScopes;
+}
+//----< Here's where all the parts get assembled >----------------
 Parser* ConfigParserForAST::Build()
 {
 	try
@@ -191,54 +231,13 @@ Parser* ConfigParserForAST::Build()
 		// these must come first - they return true on match
 		// so rule checking continues
 
-		pBeginningOfScope = new BeginningOfScope();
-		pHandlePush = new HandlePush(pRepo);
-		pAddScopeNode = new AddScopeNode(pRepo);
-		pBeginningOfScope->addAction(pHandlePush);
-		pBeginningOfScope->addAction(pAddScopeNode);
-		pParser->addRule(pBeginningOfScope);
-
-		pEndOfScope = new EndOfScope();
-		pHandlePop = new HandlePop(pRepo);
-		pMoveToParentNode = new MoveToParentNode(pRepo);
-		pEndOfScope->addAction(pHandlePop);
-		pEndOfScope->addAction(pMoveToParentNode);
-		pParser->addRule(pEndOfScope);
-
-		pNameSpaceDefinition = new NameSpaceDefinition();
-		pPushNamespace = new PushNamespace(pRepo);
-	    pAddNamespaceNode = new AddNamespaceNode(pRepo);
-		pNameSpaceDefinition->addAction(pPushNamespace);
-		pNameSpaceDefinition->addAction(pAddNamespaceNode);
-		pParser->addRule(pNameSpaceDefinition);
-
-		pClassDefinition = new ClassDefinition();
-		pPushClass = new PushClass(pRepo);
-		pAddClassNode = new AddClassNode(pRepo);
-		pClassDefinition->addAction(pPushClass);
-		pClassDefinition->addAction(pAddClassNode);
-		pParser->addRule(pClassDefinition);
-
-		pStructDefinition = new StructDefinition();
-		pPushStruct = new PushStruct(pRepo);
-		pAddStructNode = new AddStructNode(pRepo);
-		pStructDefinition->addAction(pPushStruct);
-		pStructDefinition->addAction(pAddStructNode);
-		pParser->addRule(pStructDefinition);
-
-		pFunctionDefinition = new FunctionDefinition;
-		pPushFunction = new PushFunction(pRepo);  
-		pAddFunctionNode = new AddFunctionNode(pRepo);
-		pFunctionDefinition->addAction(pPushFunction);
-		pFunctionDefinition->addAction(pAddFunctionNode);
-		pParser->addRule(pFunctionDefinition);
-
-		pOtherScopes = new OtherScopes();
-		pPushOtherScopes = new PushOtherScopes(pRepo);
-		pAddOtherScopeNode = new AddOtherScopeNode(pRepo);
-		pOtherScopes->addAction(pPushOtherScopes);
-		pOtherScopes->addAction(pAddOtherScopeNode);
-		pParser->addRule(pOtherScopes);
+		pBeginningOfScope = configureRuleForStartScope(pParser, pRepo);
+	    pEndOfScope = configureRuleForEndScope(pParser, pRepo);
+		pNameSpaceDefinition = configureRuleForNameSpaces(pParser, pRepo);
+	    pClassDefinition = configureRuleForClass(pParser, pRepo);
+	    pStructDefinition = configureRuleForStruct(pParser, pRepo);
+	    pFunctionDefinition = configureRuleForFunction(pParser, pRepo);
+		pOtherScopes = configureRuleForOtherScope(pParser, pRepo);
 
 		return pParser;
   }
