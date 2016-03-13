@@ -1,8 +1,8 @@
-﻿  ConfigureParser.cpp
-e:\syracuse(spring2016)\ood\project2\project2helper\parser\actionsandrules.h(521): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+﻿  ActionsAndRules.cpp
   Generating Code...
   Compiling...
-  Parser.cpp
-e:\syracuse(spring2016)\ood\project2\project2helper\parser\actionsandrules.h(521): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  ConfigureParser.cpp
   Generating Code...
+  Skipping... (no relevant changes detected)
+  Parser.cpp
   Parser.vcxproj -> E:\Syracuse(Spring2016)\OOD\Project2\Project2Helper\x64\Debug\Parser.exe

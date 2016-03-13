@@ -1,20 +1,21 @@
-
-
-
-
-
+/////////////////////////////////////////////////////////////////////////////
+// MetricExecutive.h - Executive package for the Application               //
+// ver 1.0                                                                 //
+// ----------------------------------------------------------------------- //
+// Language:    Visual C++, Visual Studio 2015                             //
+// Platform:    ThinkPad L440, Core i7-4712MQ                              //
+// Author:      Alok Arya                                                  //
+//              (315) 728-0088, alarya@syr.edu                             //
+/////////////////////////////////////////////////////////////////////////////
 
 #include "MetricExecutive.h"
-#include "../FileSystem-Windows/FileSystemDemo/FileSystem.h"
+#include "../FileMgr/FileMgr.h"
 #include <iostream>
 #include "MetricAnalyzer.h"
 #include <io.h>
 
-using namespace FileSystem;
-
-#ifdef  randon
-
-
+using namespace File;
+using namespace Executive;
 
 int main(int argc, char* argv[])
 {
@@ -35,20 +36,24 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 
-	Directory d;
-	std::string path = Path::getFullFileSpec(argv[1]) + "\\";
-	std::cout << "\n" << path << "\n" ;
-	std::vector<std::string> files = Directory::getFiles(path, argv[2]);
-	//std::cout << files.size();
-	for (auto f : files)
+	FileMgr fileMgr;
+	std::vector<string> files = fileMgr.getAllFiles(argv[1], argv[2]);
+	
+	MetricAnalyzer metricAnalyzer;
+
+	for (auto file : files)
 	{
-		std::string fileName = path + f;
-		std::cout << "\n" << fileName << "\n";
-
-	   
+		//metricAnalyzer = new MetricAnalyzer();
+		try {
+			metricAnalyzer.Analyze(file);
+		}
+		catch (std::exception& e)
+		{
+			std::cout << e.what() << "\n";
+			return 0;
+		}
+		//delete metricAnalyzer;
 	}
-
 	return 0;
 }
 
-#endif //  randon

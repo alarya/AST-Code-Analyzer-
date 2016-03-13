@@ -100,7 +100,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;TEST_ANALYZER;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;zTEST_ANALYZER;zTEST_ACTIONSANDRULES;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -145,6 +145,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\FileMgr\FileMgr.h" />
     <ClInclude Include="..\FileSystem-Windows\FileSystemDemo\FileSystem.h" />
     <ClInclude Include="..\Parser\AbstractSyntaxTree.h" />
     <ClInclude Include="..\Parser\ActionsAndRules.h" />
@@ -160,6 +161,7 @@
     <ClInclude Include="MetricExecutive.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\FileMgr\FileMgr.cpp" />
     <ClCompile Include="..\FileSystem-Windows\FileSystemDemo\FileSystem.cpp" />
     <ClCompile Include="..\Parser\AbstractSyntaxTree.cpp" />
     <ClCompile Include="..\Parser\ActionsAndRules.cpp" />

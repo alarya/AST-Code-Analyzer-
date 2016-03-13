@@ -1,0 +1,73 @@
+
+
+
+#include "FileMgr.h"
+#include <vector>
+#include "../FileSystem-Windows/FileSystemDemo/FileSystem.h"
+
+using namespace std;
+using namespace File;
+using namespace FileSystem;
+
+void FileMgr::getFiles(string dir, string pattern)
+{
+
+	std::string path = Path::getFullFileSpec(dir) + "\\";
+
+	cout << path;
+
+	auto subDirs = Directory::getDirectories(path);
+
+	if (subDirs.size() == 0)
+		return;
+
+	for each (auto dir in subDirs)
+	{
+		cout << dir;
+		getAllFiles(dir, pattern);
+	}
+
+	/*std::cout << "\n" << path << "\n";*/
+	
+	auto filesInDir = Directory::getFiles(path, pattern);
+	
+	for (auto f : filesInDir)
+	{
+		std::string fileName = path + f;
+		files.push_back(fileName);
+	}
+}
+
+vector<string> FileMgr::getAllFiles(string dir, string pattern)
+{
+	getFiles(dir, pattern);
+
+	return files;
+}
+
+
+#ifdef TEST_FILEMGR
+int main()
+{
+	string dir = "../../root";
+	string pattern = "*cpp";
+	FileMgr fileMgr;
+	vector<string> files;
+	
+	try {
+		files = fileMgr.getAllFiles(dir, pattern);
+	}
+
+	catch (exception& e)
+	{
+		cout << e.what() << '\n';
+	}
+
+
+	for (auto f : files)
+	{
+		cout << "\n " << f << " \n";
+	}
+}
+
+#endif 

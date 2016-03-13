@@ -12,18 +12,25 @@ using namespace FileSystem;
 
 void MetricAnalyzer::Analyze(std::string fileName)
 {
-	ConfigParserForAST builder;
+	ConfigParserForAST* builder = new ConfigParserForAST();
 	Parser* _parser;
-	_parser = builder.Build();
-	builder.Attach(fileName);
 
-	while (_parser->next())
+	_parser = builder->Build();
+	if (builder->Attach(fileName, true))
 	{
-		_parser->parse();
+		std::cout << "\nAnalyzing file: " << fileName << "\n";
+		while (_parser->next())
+		{
+			_parser->parse();
+		}
+		builder->AST()->printTree();
 	}
-
-	builder.AST()->walkTree();
-
+	else
+	{
+		std::cout << "\n Could not attach file to parser \n";
+	}
+	
+	delete builder;
 }
 
 
@@ -32,10 +39,18 @@ void MetricAnalyzer::Analyze(std::string fileName)
 int main()
 {
 	std::string path = Path::getFullFileSpec("../../Parser") + "\\";
-	//std::string file = path + "ActionsAndRules.h";
-	std::string file = path + "Parser.h";
+	std::string file = path + "ActionsAndRules.h";
+	//std::string file = path + "Parser.h";
 	MetricAnalyzer metricAnalyzer;
-	metricAnalyzer.Analyze(file);
+
+	try {
+		metricAnalyzer.Analyze(file);
+	}
+
+	catch (std::exception& e)
+	{
+		std::cout << e.what() << '\n';
+	}
 }
 
 #endif 

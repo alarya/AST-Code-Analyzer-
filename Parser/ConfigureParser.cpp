@@ -48,7 +48,6 @@ ConfigParseToConsole::~ConfigParseToConsole()
   delete pIn;
 }
 //----< attach toker to a file stream or stringstream >------------
-
 bool ConfigParseToConsole::Attach(const std::string& name, bool isFile)
 {
   if(pToker == 0)
@@ -59,7 +58,6 @@ bool ConfigParseToConsole::Attach(const std::string& name, bool isFile)
   return pToker->attach(pIn);
 }
 //----< Here's where alll the parts get assembled >----------------
-
 Parser* ConfigParseToConsole::Build()
 {
   try
@@ -128,29 +126,45 @@ Parser* ConfigParseToConsole::Build()
 }
 
 //----< destructor releases all parts >------------------------------
-
 ConfigParserForAST::~ConfigParserForAST()
 {
-	// when Builder goes out of scope, everything must be deallocated
-
-	delete pHandlePush;
 	delete pBeginningOfScope;
+	delete pHandlePush;
 	delete pAddScopeNode;
-	delete pHandlePop;
+		
 	delete pEndOfScope;
+	delete pHandlePop;
 	delete pMoveToParentNode;
-	delete pPushFunction;
+	
+	delete pNameSpaceDefinition;
+	delete pPushNamespace;
+	delete pAddNamespaceNode;
+
+	delete pClassDefinition;
+	delete pPushClass;
+	delete pAddClassNode;
+
+	delete pStructDefinition;
+	delete pPushStruct;
+	delete pAddStructNode;
+
 	delete pFunctionDefinition;
+	delete pPushFunction;
 	delete pAddFunctionNode;
+
+	delete pOtherScopes;
+	delete pAddOtherScopeNode;
+	delete pPushOtherScopes;
+
 	delete pRepo;
 	delete pParser;
 	delete pSemi;
 	delete pToker;
+
 	pIn->close();
 	delete pIn;
 }
 //----< attach toker to a file stream or stringstream >------------
-
 bool ConfigParserForAST::Attach(const std::string& name, bool isFile)
 {
 	if (pToker == 0)
@@ -161,7 +175,6 @@ bool ConfigParserForAST::Attach(const std::string& name, bool isFile)
 	return pToker->attach(pIn);
 }
 //----< Here's where alll the parts get assembled >----------------
-
 Parser* ConfigParserForAST::Build()
 {
 	try
@@ -192,10 +205,26 @@ Parser* ConfigParserForAST::Build()
 		pEndOfScope->addAction(pMoveToParentNode);
 		pParser->addRule(pEndOfScope);
 
+		pNameSpaceDefinition = new NameSpaceDefinition();
+		pPushNamespace = new PushNamespace(pRepo);
+	    pAddNamespaceNode = new AddNamespaceNode(pRepo);
+		pNameSpaceDefinition->addAction(pPushNamespace);
+		pNameSpaceDefinition->addAction(pAddNamespaceNode);
+		pParser->addRule(pNameSpaceDefinition);
+
 		pClassDefinition = new ClassDefinition();
+		pPushClass = new PushClass(pRepo);
 		pAddClassNode = new AddClassNode(pRepo);
+		pClassDefinition->addAction(pPushClass);
 		pClassDefinition->addAction(pAddClassNode);
 		pParser->addRule(pClassDefinition);
+
+		pStructDefinition = new StructDefinition();
+		pPushStruct = new PushStruct(pRepo);
+		pAddStructNode = new AddStructNode(pRepo);
+		pStructDefinition->addAction(pPushStruct);
+		pStructDefinition->addAction(pAddStructNode);
+		pParser->addRule(pStructDefinition);
 
 		pFunctionDefinition = new FunctionDefinition;
 		pPushFunction = new PushFunction(pRepo);  
@@ -203,6 +232,13 @@ Parser* ConfigParserForAST::Build()
 		pFunctionDefinition->addAction(pPushFunction);
 		pFunctionDefinition->addAction(pAddFunctionNode);
 		pParser->addRule(pFunctionDefinition);
+
+		pOtherScopes = new OtherScopes();
+		pPushOtherScopes = new PushOtherScopes(pRepo);
+		pAddOtherScopeNode = new AddOtherScopeNode(pRepo);
+		pOtherScopes->addAction(pPushOtherScopes);
+		pOtherScopes->addAction(pAddOtherScopeNode);
+		pParser->addRule(pOtherScopes);
 
 		return pParser;
   }

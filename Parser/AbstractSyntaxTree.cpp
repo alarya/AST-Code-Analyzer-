@@ -47,8 +47,10 @@ bool ASTree::hasChild(NodePtr& node)
 }
 
 //------------Depth First search walk in the AST -------------------------//
-void ASTree::walkTree()
+void ASTree::printTree()
 {
+	updateComplexityOfNodes();
+
 	level = 0;
 	DFS(_root);
 }
@@ -59,15 +61,11 @@ void ASTree::DFS(NodePtr& node)
 	std::string indent;
 	for (int i = 0; i < level; i++)
 	{
-		indent += ">> ";
+		indent += ">>>> ";
 	}
 	
 	//node->showNodeInfo();
-	std::cout << indent << "Type: " << node->nodeType() << "\n" ;
-	std::cout << indent << "Name: " << node->nodeName() << "\n" ;
-	std::cout << indent << "Start Line: " <<node->startLine()<< "\n";
-	std::cout << indent << "End Line: " << node->endLine() << "\n";
-	std::cout << "\n";
+	printNodeAtLevel(node, indent);
 
 	++level;
 
@@ -85,14 +83,42 @@ void ASTree::DFS(NodePtr& node)
 	--level;
 }
 
-//--------print the tree------------------------------------------------//
-void ASTree::printTree()
+void ASTree::printNodeAtLevel(NodePtr& node, std::string indent)
 {
+	std::cout << indent << "Type: " << node->nodeType() << "\n";
+	std::cout << indent << "Name: " << node->nodeName() << "\n";
+	if(node->nodeType() == "function")
+		std::cout << indent << "Line Count: " << node->endLine() - node->startLine() - 1 << "\n";
+	if (node->nodeType() == "function")
+		std::cout << indent << "Complexity : " << node->getNoOfDescendants() << "\n";
+	std::cout << "\n";
+}
 
-	//std::vector<NodePtr>* tree;
+//--------Update number of descendants value for each node------------------------------------------------//
+void ASTree::updateComplexityOfNodes()
+{
+	_root->setNoOfDescendants(1);
+	for each(auto child in _root->children())
+	{
+		_root->setNoOfDescendants(_root->getNoOfDescendants() + recursiveUpdateComplexity(child));
+	}
+}
+int ASTree::recursiveUpdateComplexity(NodePtr& node)
+{
+	node->setNoOfDescendants(1);
+	
+	if (node->noOfChildren() == 0)
+	{
+		node->setNoOfDescendants(1);
+		return 1;
+	}
 
-	//tree->push_back(_root);
+	for each(auto child in node->children() )
+	{
+		node->setNoOfDescendants(recursiveUpdateComplexity(child) + node->getNoOfDescendants() );
+	}
 
+	return node->getNoOfDescendants();
 }
 
 void ASTree::BFS(NodePtr& node) 

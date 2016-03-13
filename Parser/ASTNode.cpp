@@ -80,7 +80,7 @@ std::vector <NodePtr> ASTNode::children()
 //------------no Of childre of the node-----------------//
 int ASTNode::noOfChildren()
 {
-	return _children.size();
+	return static_cast<int>(_children.size());
 }
 
 //-------------remove a child -------------------------//

@@ -36,12 +36,20 @@ int testParsing()
 		PrintClass pcls;
 		cls.addAction(&pcls);
 
+		StructDefinition str;
+		PrintStruct pstr;
+		str.addAction(&pstr);
+
 		NameSpaceDefinition nsp;
 		PrintNamespace pnsp;
 		nsp.addAction(&pnsp);
 
-		//char* fileName = "ActionsAndRules.h";
-		char* fileName = "ASTNode.h";
+		OtherScopes osc;
+		PrintOtherScopes posc;
+		osc.addAction(&posc);
+
+		char* fileName = "../../Parser/ActionsAndRules.h";
+		//char* fileName = "ASTNode.h";
 
 		Scanner::Toker toker;
 		std::ifstream in(fileName);
@@ -56,8 +64,9 @@ int testParsing()
 		parser.addRule(&pps); //to detect preproc statements
 		parser.addRule(&fnd); //to detect function decl
 		parser.addRule(&cls); //to detect class decl
+		parser.addRule(&str); //to detect struct decl
 		parser.addRule(&nsp); //to detect namespace def
-
+		parser.addRule(&osc); //to detect other scopes
 		while (se.get())
 			parser.parse();
 
@@ -73,8 +82,7 @@ int testParsing()
 	{
 		std::cout << "\n\n  " << ex.what() << "\n\n";
 	}
-
-	getchar();
+	return 0;
 }
 
 
@@ -83,8 +91,9 @@ int testAST()
 	
 	try
 	{
-		//char* fileName = "ActionsAndRules.h";
-		char* fileName = "ASTNode.h";
+		//char* fileName = "../../Parser/ActionsAndRules.h";
+		//char* fileName = "ASTNode.h";
+		char* fileName = "../../Tokenizer/Tokenizer.cpp";
 
 		std::ifstream in(fileName);
 		if (!in.good())
@@ -132,18 +141,35 @@ int testAST()
 		pClassDefinition->addAction(pAddClassNode);
 		pParser->addRule(pClassDefinition);
 
+		StructDefinition* pStructDefinition = new StructDefinition();
+		PushStruct* pPushStruct = new PushStruct(pRepo);
+		AddStructNode* pAddStructNode = new AddStructNode(pRepo);
+		pStructDefinition->addAction(pPushStruct);
+		pStructDefinition->addAction(pAddStructNode);
+		pParser->addRule(pStructDefinition);
+
 		FunctionDefinition* pFunctionDefinition = new FunctionDefinition();
 		PushFunction* pPushFunction = new PushFunction(pRepo);
 		AddFunctionNode* pAddFunctionNode = new AddFunctionNode(pRepo);
 		pFunctionDefinition->addAction(pPushFunction);
 		pFunctionDefinition->addAction(pAddFunctionNode);
 		pParser->addRule(pFunctionDefinition);
+
+		OtherScopes* pOtherScopes = new OtherScopes();
+		PushOtherScopes* pPushOtherScopes = new PushOtherScopes(pRepo);
+		AddOtherScopeNode* pAddOtherScopeNode = new AddOtherScopeNode(pRepo);
+		pOtherScopes->addAction(pPushOtherScopes);
+		pOtherScopes->addAction(pAddOtherScopeNode);
+		pParser->addRule(pOtherScopes);
 		
 		while (pSemi->get())
 			pParser->parse();
 
-		pAst->walkTree();
+		pAst->printTree();
 
+		delete pStructDefinition;
+		delete pPushStruct;
+		delete pAddStructNode;
 		delete pFunctionDefinition;
 		delete pPushFunction;
 		delete pAddFunctionNode;
@@ -157,6 +183,9 @@ int testAST()
 		delete pBeginningOfScope;
 		delete pHandlePush;
 		delete pAddScopeNode;
+		delete pOtherScopes;
+		delete pAddOtherScopeNode;
+		delete pPushOtherScopes;
 		delete pRepo;
 		delete pAst;
 		delete pParser;
@@ -168,12 +197,19 @@ int testAST()
 		std::cout << "\n\n  " << ex.what() << "\n\n";
 	}
 
-	getchar();
+	return 0;
 }
 int main(int argc, char* argv[])
 {
-	//return testParsing();
-
-	return testAST();
+	
+	try
+	{
+		//return testParsing();
+		return testAST();
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << e.what() ;
+	}
 }
 #endif

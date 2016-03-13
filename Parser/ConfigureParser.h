@@ -7,7 +7,8 @@
 //  Lanaguage:     Visual C++ 2005                                 //
 //  Platform:      Dell Dimension 9150, Windows XP SP2             //
 //  Application:   Prototype for CSE687 Pr1, Sp06                  //
-//  Author:        Jim Fawcett, CST 2-187, Syracuse University     //
+//  Modified by:   Alok Arya  (alarya@syr.edu)                     //
+//  Original Author: Jim Fawcett, CST 2-187, Syracuse University   //
 //                 (315) 443-3948, jfawcett@twcny.rr.com           //
 /////////////////////////////////////////////////////////////////////
 /*
@@ -46,8 +47,6 @@
   - first release
 
 */
-
-//
 #include <fstream>
 #include "Parser.h"
 #include "../SemiExp/SemiExp.h"
@@ -57,9 +56,8 @@
 
 using namespace AST;
 
-///////////////////////////////////////////////////////////////
-// build parser that writes its output to console
 
+//--- build parser that writes its output to console------------------------------------
 class ConfigParseToConsole : IBuilder
 {
 public:
@@ -67,10 +65,7 @@ public:
   ~ConfigParseToConsole();
   bool Attach(const std::string& name, bool isFile=true);
   Parser* Build();
-
 private:
-  // Builder must hold onto all the pieces
-
   std::ifstream* pIn;
   Scanner::Toker* pToker;
   Scanner::SemiExp* pSemi;
@@ -78,7 +73,6 @@ private:
   Repository* pRepo;
   ASTree* pAst;
 
-  // add Rules and Actions
   //Rules
   BeginningOfScope* pBeginningOfScope;
   EndOfScope* pEndOfScope;
@@ -111,6 +105,7 @@ private:
   ConfigParseToConsole& operator=(const ConfigParseToConsole&) = delete;
 };
 
+//--- build parser that creates an AST which can be used for analysis-------------------
 class ConfigParserForAST : IBuilder
 {
 public:
@@ -120,8 +115,6 @@ public:
 	Parser* Build();
 	ASTree* AST() { return pAst; }
 private:
-	// Builder must hold onto all the pieces
-
 	std::ifstream* pIn;
 	Scanner::Toker* pToker;
 	Scanner::SemiExp* pSemi;
@@ -133,10 +126,12 @@ private:
 	//Rules
 	BeginningOfScope* pBeginningOfScope;
 	EndOfScope* pEndOfScope;
+	NameSpaceDefinition* pNameSpaceDefinition;
 	ClassDefinition* pClassDefinition;
+	StructDefinition* pStructDefinition;
 	FunctionDefinition* pFunctionDefinition;
+	OtherScopes* pOtherScopes;
 	Declaration* pDeclaration;
-	Executable* pExecutable;
 
 	//Actions
 	HandlePush* pHandlePush;
@@ -145,19 +140,22 @@ private:
 	HandlePop* pHandlePop;
 	MoveToParentNode* pMoveToParentNode;
 
+	PushNamespace* pPushNamespace;
+	AddNamespaceNode* pAddNamespaceNode;
+
 	PushClass* pPushClass;
 	AddClassNode* pAddClassNode;
 
+	PushStruct* pPushStruct;
+	AddStructNode* pAddStructNode;
+
 	PushFunction* pPushFunction;
 	AddFunctionNode* pAddFunctionNode;
-	PrintFunction* pPrintFunction;
 
-	ShowDeclaration* pShowDeclaration;
-
-	ShowExecutable* pShowExecutable;
+	PushOtherScopes* pPushOtherScopes;
+	AddOtherScopeNode* pAddOtherScopeNode;
 
 	// prohibit copies and assignments
-
 	ConfigParserForAST(const ConfigParseToConsole&) = delete;
 	ConfigParserForAST& operator=(const ConfigParseToConsole&) = delete;
 

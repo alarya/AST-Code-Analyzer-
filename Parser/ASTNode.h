@@ -30,16 +30,19 @@ public:
 	void setNodeName(std::string _name) { name = _name; }
 	void setLineStart(size_t _start) { startLineCount = _start; }
 	void setLineEnd(size_t _end) { endLineCount = _end; }
+	void setNoOfDescendants(int _no) { noOfDescendants = _no; }
 	std::string nodeType(){ return type; }
 	std::string nodeName() { return name; }
 	size_t startLine() { return startLineCount; }
 	size_t endLine() { return endLineCount; }
+	int getNoOfDescendants() { return noOfDescendants; }
 	int noOfChildren();
 private:
 	std::string type;
 	std::string name;
 	size_t startLineCount = 0;
 	size_t endLineCount = 0;
+	int noOfDescendants = 0;
 	std::string show()
 	{
 		std::ostringstream temp;

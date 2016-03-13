@@ -55,7 +55,6 @@
   - first release
 
 */
-//
 #include <queue>
 #include <string>
 #include <sstream>
@@ -69,11 +68,8 @@
 
 using namespace Scanner;
 using namespace AST;
-///////////////////////////////////////////////////////////////
-// ScopeStack element is application specific
-/* ToDo:
- * - chanage lineCount to two fields: lineCountStart and lineCountEnd
- */
+
+//------------Holds data to pushed to Scope Stack------------------//
 struct element
 {
   std::string type;
@@ -93,17 +89,7 @@ struct element
   }
 };
 
-//-------------------------------------------------------
-// Repository instance is used to share resources
-// among all actions.
-//-------------------------------------------------------
-/*
- * ToDo:
- * - add AST Node class
- * - provide field to hold root of AST
- * - provide interface to access AST
- * - provide helper functions to build AST, perhaps in Tree class
- */
+//---------Contains elements shared by All the rules and actions in the parser----//
 class Repository  // application specific
 {
   ScopeStack<element> stack;
@@ -237,8 +223,11 @@ public:
 	void doAction(ITokCollection*& pTc)
 	{
 		ASTNode* _curr = _pRepos->AST()->curr();
-		_curr->setLineEnd(_pRepos->lineCount());
-		_pRepos->AST()->moveToParent();
+		if (_curr != _pRepos->AST()->root())
+		{
+			_curr->setLineEnd(_pRepos->lineCount());
+			_pRepos->AST()->moveToParent();
+		}
 	}
 };
 
@@ -257,7 +246,6 @@ public:
     return true;
   }
 };
-
 //---  Action: To print preprocessor statements (Rule: PreprocStatement)------
 class PrintPreproc : public IAction
 {
@@ -276,7 +264,7 @@ public:
 	{	
 		if (pTc->find("namespace") < pTc->length())
 		{
-			if ((*pTc)[pTc->find("namespace") - 1] != "using")  //should NS decl not import
+			if ( ! (pTc->find("using")  < pTc->length()) )  //should NS decl not import
 				doActions(pTc);
 		}
 
@@ -418,6 +406,83 @@ public:
 	}
 };
 
+//--- Rule: Detect Struct ---------------------------------------
+class StructDefinition : public IRule
+{
+public:
+	bool doTest(ITokCollection*& pTc)
+	{
+		ITokCollection& tc = *pTc;
+		if (tc[tc.length() - 1] == "{")
+		{
+			size_t index = tc.find("struct");
+			if (index < tc.length())
+			{
+				doActions(pTc);
+			}
+		}
+
+		return true;
+	}
+};
+//----Action: Push struct to ScopeStack (Rule: StructDefinition)---
+class PushStruct : public IAction
+{
+	Repository* _pRepos;
+public:
+	PushStruct(Repository* pRepos)
+	{
+		_pRepos = pRepos;
+	}
+	void doAction(ITokCollection*& pTc)
+	{
+		//pop anonymous scope
+		_pRepos->scopeStack().pop();
+
+		// push function scope
+		std::string name = (*pTc)[pTc->find("struct") + 1];
+		element elem;
+		elem.type = "struct";
+		elem.name = name;
+		elem.lineCount = _pRepos->lineCount();
+		_pRepos->scopeStack().push(elem);
+	}
+};
+//----Action: Push struct Node to AST (Rule: StructDefinition)-----
+class AddStructNode : public IAction
+{
+	Repository* _pRepos;
+public:
+	AddStructNode(Repository* pRepos)
+	{
+		_pRepos = pRepos;
+	}
+	void doAction(ITokCollection*& pTc)
+	{
+		//remove the anonymous node
+		_pRepos->AST()->removeCurrNode();
+
+		//Add the function node to current scope node
+		std::string name = (*pTc)[pTc->find("struct") + 1];
+		ASTNode* node = new ASTNode();
+		node->setNodeName(name);
+		node->setNodeType("struct");
+		node->setLineStart(_pRepos->lineCount());
+		_pRepos->AST()->addChild(node);
+	}
+};
+//----Action: Print struct definition----------------------------
+class PrintStruct : public IAction {
+	Repository* _pRepos;
+public:
+	void doAction(ITokCollection*& pTc)
+	{
+		std::string name = (*pTc)[pTc->find("struct") + 1];
+		std::cout << "\n  struct: " << name;
+	}
+};
+
+
 //--- Rule: Detect function -------------------------------------
 class FunctionDefinition : public IRule
 {
@@ -518,12 +583,152 @@ public:
     pTc->remove("public");
     pTc->remove(":");
     pTc->trimFront();
-    int len = pTc->find(")");
-    std::cout << "\n\n  Pretty Stmt:    ";
+    size_t len = pTc->find(")");
+    std::cout << "\n\n    Func:    ";
     for(int i=0; i<len+1; ++i)
       std::cout << (*pTc)[i] << " ";
     std::cout << "\n";
   }
+};
+
+//--- Rule: Other scopes ----------------------------------------
+class OtherScopes : public IRule {
+public:
+	bool doTest(ITokCollection*& pTc)
+	{
+		ITokCollection& tc = *pTc;
+		//scope with brackets
+		size_t index = isKeyword(pTc);
+		if (index < pTc->length() && (tc[tc.length() - 1]) == "{")
+		{
+			doActions(pTc);
+			return true;
+		}
+
+		return true;
+	}
+	size_t isKeyword(ITokCollection*& pTc)
+	{
+		const static std::string keys[]
+			= { "for", "while", "switch", "if", "catch","try","do" };
+
+		for each(auto key in keys)
+		{
+			size_t index = pTc->find(key);
+			if (index < pTc->length())
+				return index;
+		}
+		return pTc->length();
+	}
+};
+//--- Action: Prints Other scopes (Rule: OtherScopes)-------------------
+class PrintOtherScopes : public IAction
+{
+	Repository* _pRepos;
+public:
+	void doAction(ITokCollection*& pTc)
+	{
+		ITokCollection& tc = *pTc;
+		//scope with brackets
+		size_t index = isKeyword(pTc);
+		if (index < pTc->length() &&  ( tc[tc.length() - 1] ) == "{")
+		{
+			std::cout << "\n" << pTc->show();
+			return;
+		}
+	}
+	size_t isKeyword(ITokCollection*& pTc)
+	{
+		const static std::string keys[]
+			= { "for", "while", "switch", "if", "catch","try","do" };
+
+		for each(auto key in keys)
+		{
+			size_t index = pTc->find(key);
+			if (index < pTc->length())
+				return index;
+		}
+		return pTc->length();
+	}
+};
+//--- Action: Push Other scopes to Stack (Rule: OtherScopes)-------------
+class PushOtherScopes : public IAction
+{
+	Repository* _pRepos;
+public:
+	PushOtherScopes(Repository* pRepos)
+	{
+		_pRepos = pRepos;
+	}
+	void doAction(ITokCollection*& pTc)
+	{
+		//pop anonymous scope
+		_pRepos->scopeStack().pop();
+
+		ITokCollection& tc = *pTc;
+		size_t index = isKeyword(pTc);
+		// push scope
+		std::string name = (*pTc)[index];
+		element elem;
+		elem.type = "scope";
+		elem.name = name;
+		elem.lineCount = _pRepos->lineCount();
+		_pRepos->scopeStack().push(elem);
+		return;		
+	}
+	size_t isKeyword(ITokCollection*& pTc)
+	{
+		const static std::string keys[]
+			= { "for", "while", "switch", "if", "catch","try","do" };
+
+		for each(auto key in keys)
+		{
+			size_t index = pTc->find(key);
+			if (index < pTc->length())
+				return index;
+		}
+		return pTc->length();
+	}
+};
+//--- Action: Add new node for the scope to AST (Rule: OtherScopes) -----
+class AddOtherScopeNode : public IAction 
+{
+	Repository* _pRepos;
+public:
+	AddOtherScopeNode(Repository* pRepos)
+	{
+		_pRepos = pRepos;
+	}
+	void doAction(ITokCollection*& pTc)
+	{
+		ITokCollection& tc = *pTc;
+		size_t index = isKeyword(pTc);
+
+		//remove the anonymous node
+		_pRepos->AST()->removeCurrNode();
+
+		//Add the function node to current scope node
+		std::string name = (*pTc)[index];
+		ASTNode* node = new ASTNode();
+		node->setNodeName(name);
+		node->setNodeType("scope");
+		node->setLineStart(_pRepos->lineCount());
+		_pRepos->AST()->addChild(node);
+	}
+	size_t isKeyword(ITokCollection*& pTc)
+	{
+		const static std::string keys[]
+			= { "for", "while", "switch", "if", "catch","try","do" };
+
+		for each(auto key in keys)
+		{
+			size_t index = pTc->find(key);
+			if (index < pTc->length())
+				return index;
+		}
+		return pTc->length();
+	}
+
 };
 
 //----Rule: To detect declaration-----------------------------------------------
@@ -638,8 +843,10 @@ public:
     // remove comments
     Scanner::SemiExp se;
     for (size_t i = 0; i<tc.length(); ++i)
-      if (!se.isComment(tc[i]))
-        se.push_back(tc[i]);
+		if (!se.isComment(tc[i]))
+		{
+			se.push_back(tc[i]);
+		}
     // show cleaned semiExp
     std::cout << "\n  Declaration: " << se.show();
   }
